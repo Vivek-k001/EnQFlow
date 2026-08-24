@@ -1,19 +1,16 @@
 # EnQFlow
 
-**EnQ** → Enqueue → Join  
-**Flow** → Move smoothly through the queue
+**EnQ** → Enqueue → Join | **Flow** → Move smoothly through the queue
 
-## Overview
-EnQFlow is a **real-time digital queue management system** designed for clinics, hospitals, salons, government offices, and small businesses. It eliminates the need for physical waiting lines, allowing customers to join a queue digitally and monitor their status in real time.
+A real-time digital queue management system designed for clinics, salons, and businesses. EnQFlow eliminates crowded waiting rooms and provides a seamless, app-free experience for customers while giving staff powerful management tools.
 
-## Problem
-Traditional queuing requires customers to sit in a physical waiting area, causing congestion, frustration, and a poor customer experience. Mobile applications for queue management often force users to download an app they might only use once. Furthermore, fully digital open queues can be abused by individuals joining remotely without being physically present.
+## The Hybrid Solution
 
-## Solution
-EnQFlow provides a hybrid solution:
-1. **Physical Presence Verification**: Customers scan a permanent QR code at the reception. This sends a "Queue Request" to the receptionist. The customer is only added to the queue when the receptionist physically verifies their presence and clicks "Approve".
-2. **No App Installation Required**: The customer tracks their queue status via a lightweight, mobile-first Progressive Web App (PWA) accessed directly through their browser.
-3. **Real-time Synchronization**: A dedicated Electron desktop app for receptionists syncs instantly with the customer's web interface and a public display screen.
+Instead of forcing customers to download an app or allowing remote abuse of open digital queues, EnQFlow provides a smart hybrid approach:
+
+1. **Physical QR Scan**: Customers scan a code at reception to request entry via a lightweight Web App (PWA).
+2. **Staff Verification**: Receptionists verify the customer's presence and approve them via the Desktop App.
+3. **Live Sync**: Both apps are perfectly synced in real-time, guiding the customer through their wait until they are called.
 
 ## Features
 *   **Customer Web App (PWA)**: Mobile-first interface for joining queues, viewing live positions, and receiving browser push notifications.
@@ -73,6 +70,12 @@ The system consists of two separate client applications communicating with a cen
                     SQLite (better-sqlite3)
 ```
 
+### Component Roles
+
+*   **EnQFlow Web/PWA (Customer):** A lightweight React interface where customers join the queue and watch their live status. No app installation required; it uses Web Push for notifications and CSS animations to simulate a physical physical ticket.
+*   **EnQFlow Desktop (Receptionist):** An Electron-based React dashboard for staff. It provides high-performance, real-time control over the queue, allowing staff to approve requests, assign counters, and monitor daily metrics.
+*   **Node.js Backend (Server):** The central nervous system. It exposes REST APIs for standard data and uses Socket.IO for sub-second, bi-directional real-time events between the Web and Desktop clients, backed by a robust SQLite database.
+
 ## Queue State Machine
 
 The backend enforces a strict state machine to prevent client-side manipulation.
@@ -125,19 +128,6 @@ npm run dev
 *   **Customer Web App:** Access at `http://localhost:5173`
 *   **Receptionist Desktop App:** Electron will launch automatically.
 *   **Backend Server:** Runs silently on port 5000.
-
-## Manual Configuration Required
-
-The following environment variables must be configured in your `.env` file before full production use:
-
-| Variable | Purpose | Required? |
-| :--- | :--- | :--- |
-| `JWT_SECRET` | Used for signing authentication tokens. | **Yes** |
-| `VAPID_PUBLIC_KEY` | Public key for Web Push Notifications. | Optional (for Push) |
-| `VAPID_PRIVATE_KEY` | Private key for Web Push Notifications. | Optional (for Push) |
-| `ONEDRIVE_CLIENT_ID` | Microsoft Entra ID Client ID for cloud backup. | Optional |
-| `ONEDRIVE_CLIENT_SECRET` | Microsoft Entra ID Client Secret. | Optional |
-| `FRONTEND_URL` | Used for CORS policies on the backend. | **Yes** (in production) |
 
 ---
 *Developed as a comprehensive portfolio project demonstrating real-time systems, desktop development, and practical software architecture.*
