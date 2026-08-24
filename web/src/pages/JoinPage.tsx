@@ -284,7 +284,7 @@ export const JoinPage = () => {
                   id="phone-input"
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !name) {
                       e.preventDefault();
@@ -292,6 +292,7 @@ export const JoinPage = () => {
                     }
                   }}
                   pattern="^[0-9]{10}$"
+                  maxLength={10}
                   title="Phone number must be exactly 10 digits"
                   placeholder="Enter phone number"
                   required
