@@ -252,9 +252,16 @@ export const JoinPage = () => {
                   <User className="w-4 h-4" />
                 </div>
                 <input
+                  id="name-input"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById('phone-input')?.focus();
+                    }
+                  }}
                   pattern="^[A-Za-z\s]+$"
                   title="Name can only contain letters and spaces"
                   placeholder="Enter your name"
@@ -267,19 +274,27 @@ export const JoinPage = () => {
             {/* Phone Input */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
-                3. Phone Number <span className="text-[10px] text-muted font-normal lowercase">(optional for SMS alert)</span>
+                3. Phone Number
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted group-focus-within:text-primary transition-colors">
                   <Phone className="w-4 h-4" />
                 </div>
                 <input
+                  id="phone-input"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !name) {
+                      e.preventDefault();
+                      document.getElementById('name-input')?.focus();
+                    }
+                  }}
                   pattern="^[0-9]{10}$"
                   title="Phone number must be exactly 10 digits"
                   placeholder="Enter phone number"
+                  required
                   className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-sm"
                 />
               </div>
