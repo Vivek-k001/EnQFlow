@@ -3,6 +3,7 @@ dist/
 build/
 .env
 data/*.sqlite
+data/*.db
 data/*.sqlite-journal
 data/*.sqlite-wal
 data/*.sqlite-shm
