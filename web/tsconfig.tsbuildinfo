@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/counter.ts","./src/main.ts","./src/pages/displaypage.tsx","./src/pages/joinpage.tsx","./src/pages/queuepage.tsx","./src/services/api.ts"],"errors":true,"version":"6.0.3"}
