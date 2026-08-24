@@ -6,6 +6,7 @@ function createWindow() {
     width: 1280,
     height: 720,
     autoHideMenuBar: true,
+    icon: path.join(__dirname, 'public', 'logo.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
