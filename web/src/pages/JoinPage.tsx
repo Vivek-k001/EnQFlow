@@ -187,8 +187,11 @@ export const JoinPage = () => {
         
         {/* Header Branding */}
         <div className="text-center mb-8">
-          <img src="/logo-landscape.png" alt="EnQFlow" className="h-10 w-auto mx-auto object-contain" />
-          <p className="text-muted text-xs font-semibold uppercase tracking-wider mt-3">
+          <img src="/logo.png" alt="EnQFlow Icon" className="w-16 h-16 mx-auto object-contain shadow-md rounded-2xl mb-3" />
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
+            EnQ<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Flow</span>
+          </h1>
+          <p className="text-muted text-xs font-semibold uppercase tracking-wider mt-1">
             Smart Contactless Check-In
           </p>
         </div>

@@ -261,8 +261,16 @@ export const Dashboard = () => {
       <aside className="w-72 bg-surface border-r border-border flex flex-col justify-between p-6 backdrop-blur-xl relative z-20 shrink-0">
         <div>
           {/* Brand Logo */}
-          <div className="flex items-center mb-8">
-            <img src="/logo-landscape.png" alt="EnQFlow" className="h-9 w-auto object-contain" />
+          <div className="flex flex-col items-start gap-3 mb-8">
+            <img src="/logo.png" alt="EnQFlow Icon" className="w-14 h-14 object-contain shadow-sm rounded-xl" />
+            <div>
+              <h2 className="text-xl font-black text-foreground tracking-tight">
+                EnQ<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Flow</span>
+              </h2>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+                Reception Terminal
+              </span>
+            </div>
           </div>
 
           {/* User Profile Card */}
