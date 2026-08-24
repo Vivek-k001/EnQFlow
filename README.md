@@ -129,5 +129,6 @@ npm run dev
 *   **Receptionist Desktop App:** Electron will launch automatically.
 *   **Backend Server:** Runs silently on port 5000.
 
----
-*Developed as a comprehensive portfolio project demonstrating real-time systems, desktop development, and practical software architecture.*
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
