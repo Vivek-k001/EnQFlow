@@ -68,13 +68,9 @@ export const LoginPage = () => {
         
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3.5 bg-surface border border-border rounded-2xl shadow-md mb-4 group hover:scale-105 transition-transform duration-300">
-            <div className="p-2.5 bg-gradient-to-tr from-primary to-secondary rounded-xl text-white shadow-sm">
-              <Layers className="w-6 h-6" />
-            </div>
-          </div>
+          <img src="/logo.png" alt="EnQFlow Icon" className="w-20 h-20 mx-auto object-contain shadow-md rounded-2xl mb-4" />
           <div className="flex items-center justify-center gap-2 mb-1">
-            <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
+            <h1 className="text-4xl font-extrabold text-foreground tracking-tight">
               EnQ<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Flow</span>
             </h1>
             <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 rounded-full">
