@@ -275,6 +275,8 @@ export const JoinPage = () => {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  pattern="^\+?[0-9\s\-\(\)]{7,15}$"
+                  title="Please enter a valid phone number (e.g. +1 555-019-2834)"
                   placeholder="e.g. +1 (555) 019-2834"
                   className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-sm"
                 />

@@ -8,7 +8,7 @@ import { io } from '../index';
 const createRequestSchema = z.object({
   service_id: z.string(),
   customer_name: z.string().min(1),
-  customer_phone: z.string().optional(),
+  customer_phone: z.string().regex(/^\+?[0-9\s\-\(\)]{7,15}$/, 'Invalid phone number format').optional().or(z.literal('')),
 });
 
 export const createQueueRequest = (req: Request, res: Response) => {
