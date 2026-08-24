@@ -71,7 +71,7 @@ The system consists of two separate client applications communicating with a cen
                        │
                        ▼
                     SQLite (better-sqlite3)
-\`\`\`
+```
 
 ## Queue State Machine
 
@@ -102,49 +102,29 @@ The backend enforces a strict state machine to prevent client-side manipulation.
 *   npm
 
 ### 2. Install Dependencies
-Navigate into each directory and install dependencies:
+Install dependencies for the root runner and all sub-projects:
 
-\`\`\`bash
+```bash
+npm install
 cd server && npm install
 cd ../web && npm install
 cd ../desktop && npm install
-\`\`\`
+```
 
 ### 3. Environment Variables
 Copy the `.env.example` file to `.env` in the root directory and configure it.
 
 ### 4. Run the Application
-The applications can be started independently in three separate terminals:
+The entire application stack (Backend, Web App, Desktop App) can now be started concurrently with a single command from the root directory:
 
-**Terminal 1 (Backend Server):**
-\`\`\`bash
-cd server
+```bash
 npm run dev
-\`\`\`
+```
 *(On the first run, the database schema will be automatically created and seeded).*
 
-**Terminal 2 (Customer Web App):**
-\`\`\`bash
-cd web
-npm run dev
-\`\`\`
-*Access at: `http://localhost:5173`*
-
-**Terminal 3 (Receptionist Desktop App):**
-\`\`\`bash
-cd desktop
-npm run dev
-\`\`\`
-*This will launch the Vite development server and automatically open the Electron application window.*
-
-## Development Accounts
-
-Use the following credentials to log in to the Receptionist Desktop App:
-
-*   **Email:** `receptionist@abchealth.com`
-*   **Password:** `recept123`
-
-*(An Admin account is also seeded with `admin@abchealth.com` / `admin123`)*
+*   **Customer Web App:** Access at `http://localhost:5173`
+*   **Receptionist Desktop App:** Electron will launch automatically.
+*   **Backend Server:** Runs silently on port 5000.
 
 ## Manual Configuration Required
 
