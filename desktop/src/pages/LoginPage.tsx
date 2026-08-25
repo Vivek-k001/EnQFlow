@@ -64,6 +64,21 @@ export const LoginPage = () => {
       {/* Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none"></div>
 
+      {/* Top Right Status Pill */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-2.5 bg-surface px-5 py-2.5 rounded-full shadow-sm">
+        <span className="relative flex h-3 w-3">
+          {serverStatus === 'connected' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success/75 opacity-75"></span>}
+          <span className={`relative inline-flex rounded-full h-3 w-3 ${
+            serverStatus === 'connected' ? 'bg-success' : 
+            serverStatus === 'checking' ? 'bg-warning' : 'bg-danger'
+          }`}></span>
+        </span>
+        <span className="text-[13px] font-bold text-foreground">
+          {serverStatus === 'connected' ? 'Queue Engine Connected' :
+           serverStatus === 'checking' ? 'Connecting to Engine...' : 'Queue Engine Disconnected'}
+        </span>
+      </div>
+
       <div className="w-full max-w-md relative z-10">
         
         {/* Brand Header */}
@@ -85,25 +100,6 @@ export const LoginPage = () => {
         {/* Glass Card Container */}
         <div className="glass-card-light rounded-3xl p-8 shadow-xl border border-border relative">
           
-          {/* Status Header */}
-          <div className="flex items-center justify-between pb-5 mb-5 border-b border-border">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2.5 w-2.5">
-                {serverStatus === 'connected' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success/75 opacity-75"></span>}
-                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                  serverStatus === 'connected' ? 'bg-success' : 
-                  serverStatus === 'checking' ? 'bg-warning' : 'bg-danger'
-                }`}></span>
-              </span>
-              <span className="text-xs font-bold text-foreground">
-                {serverStatus === 'connected' ? 'Queue Engine Connected' :
-                 serverStatus === 'checking' ? 'Connecting to Engine...' : 'Queue Engine Disconnected'}
-              </span>
-            </div>
-            <span className="text-[11px] font-mono text-muted bg-surface px-2 py-1 rounded-md border border-border">
-              Port: 5000
-            </span>
-          </div>
 
           {errorMsg && (
             <div className="mb-5 p-3.5 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
@@ -126,7 +122,7 @@ export const LoginPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="receptionist@abchealth.com"
+                  placeholder="enter username"
                   required
                   className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-sm"
                 />
@@ -146,7 +142,7 @@ export const LoginPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="enter password"
                   required
                   className="w-full bg-surface border border-border rounded-xl pl-10 pr-10 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-sm"
                 />
@@ -184,14 +180,7 @@ export const LoginPage = () => {
 
         </div>
 
-        {/* Sub-Footer */}
-        <div className="mt-6 flex items-center justify-between text-xs text-muted px-2">
-          <span className="flex items-center gap-1.5 font-semibold">
-            <ShieldCheck className="w-4 h-4 text-secondary" />
-            JWT Role-Based Gatekeeper
-          </span>
-          <span className="font-mono text-[11px] text-muted">EnQFlow v1.0</span>
-        </div>
+
       </div>
     </div>
   );

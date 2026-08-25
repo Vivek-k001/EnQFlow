@@ -18,7 +18,7 @@ import {
   XCircle
 } from 'lucide-react';
 
-const socket = io('http://localhost:5000');
+const socket = io(`http://${window.location.hostname}:5000`);
 
 export const JoinPage = () => {
   const { organizationId } = useParams();
