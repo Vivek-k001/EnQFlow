@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getTicket } from '../services/api';
 import { io } from 'socket.io-client';
@@ -15,13 +15,22 @@ import {
   QrCode
 } from 'lucide-react';
 
-const socket = io('http://localhost:5000');
+const socket = io(`http://${window.location.hostname}:5000`);
 
 export const QueuePage = () => {
   const { ticketId } = useParams();
   const [ticket, setTicket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [calledAlert, setCalledAlert] = useState(false);
+  const [completedAlert, setCompletedAlert] = useState(false);
+
+  const calledAudioRef = useRef<HTMLAudioElement | null>(null);
+  const completedAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    calledAudioRef.current = new Audio('/sounds/called.mp3');
+    completedAudioRef.current = new Audio('/sounds/completed.wav');
+  }, []);
 
   const fetchTicket = () => {
     if (!ticketId) return;
@@ -29,7 +38,41 @@ export const QueuePage = () => {
       .then(data => {
         setTicket(data);
         if (data.status === 'CALLED') {
-          setCalledAlert(true);
+          setCalledAlert(prev => {
+            if (!prev) {
+              // Triple ding!
+              let count = 0;
+              const playDing = () => {
+                if (calledAudioRef.current) {
+                  calledAudioRef.current.currentTime = 0;
+                  calledAudioRef.current.play().catch(() => {});
+                }
+              };
+              playDing();
+              const interval = setInterval(() => {
+                count++;
+                if (count >= 2) clearInterval(interval);
+                playDing();
+              }, 500);
+            }
+            return true;
+          });
+        }
+        
+        if (data.status === 'COMPLETED' || data.status === 'SERVING') {
+          setCompletedAlert(prev => {
+            if (!prev) {
+              if (calledAudioRef.current) {
+                calledAudioRef.current.pause();
+                calledAudioRef.current.currentTime = 0;
+              }
+              if (completedAudioRef.current) {
+                completedAudioRef.current.currentTime = 0;
+                completedAudioRef.current.play().catch(() => {});
+              }
+            }
+            return true;
+          });
         }
       })
       .catch(console.error)
@@ -46,11 +89,6 @@ export const QueuePage = () => {
       socket.on('queue:customer-called', (data) => {
         if (data.id === ticketId) {
           fetchTicket();
-          setCalledAlert(true);
-          try {
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-            audio.play().catch(() => {});
-          } catch (e) {}
         }
       });
       
@@ -111,10 +149,6 @@ export const QueuePage = () => {
             <ArrowLeft className="w-4 h-4" />
             Check-in
           </Link>
-          <span className="flex items-center gap-1.5 text-xs font-bold text-secondary bg-secondary/10 border border-secondary/20 px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span>
-            Live Synced
-          </span>
         </div>
 
         {/* CALLED HERO NOTIFICATION */}
@@ -254,9 +288,6 @@ export const QueuePage = () => {
                       </span>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold text-muted bg-background px-2 py-1 rounded-lg border border-border">
-                    Live AI
-                  </span>
                 </div>
 
                 {/* Currently Serving Station */}
@@ -286,23 +317,7 @@ export const QueuePage = () => {
                   </span>
                 </div>
 
-                {/* Interactive Test Button for Demo Purposes */}
-                {ticket.status !== 'COMPLETED' && (
-                  <button 
-                    onClick={() => setTicket({...ticket, status: 'COMPLETED'})}
-                    className="w-full text-xs font-bold text-muted hover:text-primary transition-colors py-2 border border-dashed border-border rounded-xl"
-                  >
-                    Simulate Completion Tear
-                  </button>
-                )}
-                {ticket.status === 'COMPLETED' && (
-                  <button 
-                    onClick={() => fetchTicket()}
-                    className="w-full text-xs font-bold text-muted hover:text-primary transition-colors py-2 border border-dashed border-border rounded-xl flex justify-center items-center gap-2"
-                  >
-                    <Sparkles className="w-3 h-3" /> Replay Animation
-                  </button>
-                )}
+
 
               </div>
             </div>
