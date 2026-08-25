@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = `http://${window.location.hostname}:5000/api`;
 
 export const getOrganizationServices = async (orgId: string) => {
   const res = await fetch(`${API_BASE}/organizations/${orgId}/services`);

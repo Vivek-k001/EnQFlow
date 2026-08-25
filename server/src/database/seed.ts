@@ -22,13 +22,7 @@ export async function seedDb() {
     VALUES (?, ?, ?, ?)
   `).run(orgId, 'ABC Health Center', 'contact@abchealth.com', 'Mon-Fri 09:00 - 17:00');
 
-  const adminPasswordHash = await bcrypt.hash('admin123', 10);
   const receptionistPasswordHash = await bcrypt.hash('recept123', 10);
-
-  db.prepare(`
-    INSERT INTO users (id, organization_id, name, email, password_hash, role) 
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(generateId(), orgId, 'Admin User', 'admin@abchealth.com', adminPasswordHash, 'ADMIN');
 
   db.prepare(`
     INSERT INTO users (id, organization_id, name, email, password_hash, role) 

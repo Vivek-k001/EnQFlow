@@ -84,10 +84,11 @@ export const getQueueTickets = (req: AuthRequest, res: Response) => {
     const orgId = req.user.organization_id;
     const tickets = db.prepare(`
       SELECT t.*, s.name as service_name, s.prefix as service_prefix, s.average_service_time_minutes,
-             r.customer_name, r.customer_phone, r.requested_at
+             r.customer_name, r.customer_phone, r.requested_at, c.name as called_to_counter_id
       FROM queue_tickets t
       JOIN services s ON t.service_id = s.id
       JOIN queue_requests r ON t.request_id = r.id
+      LEFT JOIN counters c ON t.called_to_counter_id = c.id
       WHERE t.organization_id = ?
       ORDER BY t.created_at DESC
     `).all(orgId);
@@ -102,10 +103,11 @@ export const getActiveServingTickets = (req: AuthRequest, res: Response) => {
     const orgId = req.user.organization_id;
     const tickets = db.prepare(`
       SELECT t.*, s.name as service_name, s.prefix as service_prefix, s.average_service_time_minutes,
-             r.customer_name, r.customer_phone
+             r.customer_name, r.customer_phone, c.name as called_to_counter_id
       FROM queue_tickets t
       JOIN services s ON t.service_id = s.id
       JOIN queue_requests r ON t.request_id = r.id
+      LEFT JOIN counters c ON t.called_to_counter_id = c.id
       WHERE t.organization_id = ? AND t.status IN ('CALLED', 'SERVING')
       ORDER BY t.called_at DESC
     `).all(orgId);
@@ -190,10 +192,11 @@ export const getTicket = (req: Request, res: Response) => {
   try {
     const { ticketId } = req.params;
     const ticket = db.prepare(`
-      SELECT t.*, s.name as service_name, s.average_service_time_minutes, r.customer_name, r.customer_phone 
+      SELECT t.*, s.name as service_name, s.average_service_time_minutes, r.customer_name, r.customer_phone, c.name as called_to_counter_id
       FROM queue_tickets t
       JOIN services s ON t.service_id = s.id
       JOIN queue_requests r ON t.request_id = r.id
+      LEFT JOIN counters c ON t.called_to_counter_id = c.id
       WHERE t.id = ?
     `).get(ticketId) as any;
 
@@ -244,16 +247,21 @@ export const callNext = (req: AuthRequest, res: Response) => {
 
     if (!nextTicket) return res.status(404).json({ message: 'Queue is empty' });
 
+    let actualCounterId = null;
+    const counterName = counter_id || 'Counter 1';
+    const cRec = db.prepare('SELECT id FROM counters WHERE organization_id = ? AND name = ?').get(orgId, counterName) as any;
+    if (cRec) actualCounterId = cRec.id;
+
     db.prepare(`
       UPDATE queue_tickets 
       SET status = 'CALLED', called_to_counter_id = ?, called_at = CURRENT_TIMESTAMP 
       WHERE id = ?
-    `).run(counter_id || 'Counter 1', nextTicket.id);
+    `).run(actualCounterId, nextTicket.id);
 
     const fullTicket = {
       ...nextTicket,
       status: 'CALLED',
-      called_to_counter_id: counter_id || 'Counter 1',
+      called_to_counter_id: counterName,
       called_at: new Date().toISOString()
     };
 
