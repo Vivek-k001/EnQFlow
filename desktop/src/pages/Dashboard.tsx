@@ -33,10 +33,17 @@ import {
   UserX,
   Play,
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 const socket = io('http://localhost:5000');
+
+const parseDate = (dateStr: string) => {
+  if (!dateStr) return new Date();
+  return new Date(dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T') + 'Z');
+};
 
 export const Dashboard = () => {
   const { user, logout } = useAuthStore();
@@ -50,10 +57,22 @@ export const Dashboard = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [callingNext, setCallingNext] = useState(false);
+  const [isConnected, setIsConnected] = useState(socket.connected);
 
   // Queue Registry Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [dateRange, setDateRange] = useState<'Today' | 'Yesterday' | 'Last Week' | 'Last Month'>('Today');
+
+  const cycleDateRange = (dir: 'prev' | 'next') => {
+    const ranges: ('Today' | 'Yesterday' | 'Last Week' | 'Last Month')[] = ['Today', 'Yesterday', 'Last Week', 'Last Month'];
+    const idx = ranges.indexOf(dateRange);
+    if (dir === 'prev' && idx > 0) {
+      setDateRange(ranges[idx - 1]);
+    } else if (dir === 'next' && idx < ranges.length - 1) {
+      setDateRange(ranges[idx + 1]);
+    }
+  };
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -92,6 +111,9 @@ export const Dashboard = () => {
 
   useEffect(() => {
     fetchInitialData();
+
+    socket.on('connect', () => setIsConnected(true));
+    socket.on('disconnect', () => setIsConnected(false));
 
     socket.on('queue:request-created', (newReq) => {
       setRequests(prev => [newReq, ...prev.filter(r => r.id !== newReq.id)]);
@@ -154,6 +176,8 @@ export const Dashboard = () => {
       socket.off('queue:customer-completed');
       socket.off('queue:customer-cancelled');
       socket.off('queue:updated');
+      socket.off('connect');
+      socket.off('disconnect');
     };
   }, [selectedCounter, activeTicket?.id]);
 
@@ -234,22 +258,46 @@ export const Dashboard = () => {
   // Filtered tickets for Registry
   const filteredTickets = tickets.filter(t => {
     const matchesSearch = 
-      (t.ticket_number?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (t.customer_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (t.service_name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (t.ticket_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.customer_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (t.customer_phone || '').includes(searchQuery);
     
     if (!matchesSearch) return false;
-    if (statusFilter === 'ALL') return true;
-    if (statusFilter === 'ACTIVE') return t.status === 'CALLED' || t.status === 'SERVING';
-    return t.status === statusFilter;
+    
+    if (statusFilter !== 'ALL') {
+      if (statusFilter === 'ACTIVE' && t.status !== 'CALLED' && t.status !== 'SERVING') return false;
+      if (statusFilter !== 'ACTIVE' && t.status !== statusFilter) return false;
+    }
+
+    if (!t.created_at) return false;
+    const ticketTime = parseDate(t.created_at).getTime();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (dateRange === 'Today') {
+      if (ticketTime < today.getTime()) return false;
+    } else if (dateRange === 'Yesterday') {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (ticketTime < yesterday.getTime() || ticketTime >= today.getTime()) return false;
+    } else if (dateRange === 'Last Week') {
+      const lastWeek = new Date(today);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      if (ticketTime < lastWeek.getTime()) return false;
+    } else if (dateRange === 'Last Month') {
+      const lastMonth = new Date(today);
+      lastMonth.setDate(lastMonth.getDate() - 30);
+      if (ticketTime < lastMonth.getTime()) return false;
+    }
+
+    return true;
   });
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex overflow-hidden font-sans selection:bg-secondary selection:text-white">
+    <div className="h-screen bg-background text-foreground flex overflow-hidden font-sans selection:bg-secondary selection:text-white">
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-primary text-white border border-primary-hover px-5 py-3.5 rounded-2xl shadow-xl backdrop-blur-xl animate-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-primary text-white border border-primary-hover px-5 py-3.5 rounded-2xl shadow-xl animate-in slide-in-from-top-4 duration-300">
           <div className="p-1.5 bg-white/20 rounded-lg text-white">
             <Bell className="w-4 h-4 animate-bounce" />
           </div>
@@ -258,7 +306,7 @@ export const Dashboard = () => {
       )}
 
       {/* Sidebar */}
-      <aside className="w-72 bg-surface border-r border-border flex flex-col justify-between p-6 backdrop-blur-xl relative z-20 shrink-0">
+      <aside className="w-72 bg-surface border-r border-border flex flex-col justify-between p-6 relative z-20 shrink-0">
         <div>
           {/* Brand Logo */}
           <div className="flex flex-col items-start gap-3 mb-8">
@@ -343,14 +391,6 @@ export const Dashboard = () => {
 
         {/* Sidebar Bottom Actions */}
         <div className="pt-4 border-t border-border space-y-3">
-          <div className="flex items-center justify-between text-xs text-muted px-1">
-            <span className="flex items-center gap-2 font-medium">
-              <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-              Queue Engine Online
-            </span>
-            <span className="text-[10px] font-mono text-muted">Port 5000</span>
-          </div>
-
           <button
             onClick={logout}
             className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-background hover:bg-danger/10 text-foreground hover:text-danger border border-border hover:border-danger/30 text-xs font-bold transition-all cursor-pointer"
@@ -364,7 +404,7 @@ export const Dashboard = () => {
       {/* Main Workspace */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Top Header Bar */}
-        <header className="px-8 py-5 bg-surface/80 border-b border-border backdrop-blur-xl flex items-center justify-between sticky top-0 z-10">
+        <header className="px-8 py-5 bg-surface/80 border-b border-border flex items-center justify-between sticky top-0 z-10">
           <div>
             <h1 className="text-xl font-extrabold text-foreground tracking-tight">
               {orgInfo?.name || 'ABC Health Center'}
@@ -376,8 +416,15 @@ export const Dashboard = () => {
             </p>
           </div>
 
-          {/* Counter Switcher & Big Call Action */}
+          {/* Top Actions: Network Status & Counter Switcher */}
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-surface border border-border rounded-full px-3 py-1.5 shadow-sm">
+              <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-[#10B981]' : 'bg-danger animate-pulse'}`}></span>
+              <span className="text-xs font-semibold text-foreground">
+                {isConnected ? 'Server: Connected' : 'Server: Offline'}
+              </span>
+            </div>
+
             <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
               <Radio className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-xs font-bold text-muted">Active Counter:</span>
@@ -510,14 +557,19 @@ export const Dashboard = () => {
                   </div>
                 ) : (
                   <div className="space-y-3.5">
-                    {requests.map((req) => (
+                    {[...requests].sort((a, b) => parseDate(a.requested_at).getTime() - parseDate(b.requested_at).getTime()).map((req, index) => (
                       <div
                         key={req.id}
                         className="glass-card-light rounded-2xl p-5 border border-border shadow-sm hover:border-primary/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-2 duration-200"
                       >
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2.5">
-                            <h3 className="text-base font-extrabold text-foreground">{req.customer_name}</h3>
+                            <h3 className="text-base font-extrabold text-foreground flex items-center gap-2">
+                              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-black shadow-sm shadow-primary/30">
+                                {index + 1}
+                              </span>
+                              {req.customer_name}
+                            </h3>
                             <span className="px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider bg-secondary/10 text-secondary border border-secondary/20 rounded-md">
                               {req.service_name || 'General Consultation'}
                             </span>
@@ -531,7 +583,7 @@ export const Dashboard = () => {
                             )}
                             <span className="flex items-center gap-1 font-mono text-[11px] text-muted">
                               <Clock className="w-3 h-3 text-muted" />
-                              {req.requested_at ? new Date(req.requested_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                              {req.requested_at ? parseDate(req.requested_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'Just now'}
                             </span>
                           </div>
                         </div>
@@ -708,6 +760,30 @@ export const Dashboard = () => {
                   <table className="w-full text-left text-xs">
                     <thead className="bg-surface border-b border-border text-muted uppercase font-bold text-[10px] tracking-wider">
                       <tr>
+                        <td colSpan={8} className="px-6 py-2 bg-background border-b border-border">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="font-bold text-xs text-foreground uppercase tracking-widest mr-2">Filter By:</span>
+                            <div className="flex items-center gap-1 bg-surface border border-border rounded-lg p-0.5 shadow-sm min-w-[140px] justify-between">
+                              {dateRange !== 'Today' ? (
+                                <button onClick={() => cycleDateRange('prev')} className="p-1 rounded-md hover:bg-background text-muted hover:text-foreground cursor-pointer transition-colors">
+                                  <ChevronLeft className="w-4 h-4" />
+                                </button>
+                              ) : (
+                                <div className="w-6 h-6"></div>
+                              )}
+                              <span className="text-xs font-extrabold text-foreground text-center tracking-wide">{dateRange}</span>
+                              {dateRange !== 'Last Month' ? (
+                                <button onClick={() => cycleDateRange('next')} className="p-1 rounded-md hover:bg-background text-muted hover:text-foreground cursor-pointer transition-colors">
+                                  <ChevronRight className="w-4 h-4" />
+                                </button>
+                              ) : (
+                                <div className="w-6 h-6"></div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
                         <th className="px-6 py-4">Ticket</th>
                         <th className="px-6 py-4">Customer Name</th>
                         <th className="px-6 py-4">Service</th>
@@ -727,9 +803,31 @@ export const Dashboard = () => {
                           </td>
                         </tr>
                       ) : (
-                        filteredTickets.map((t) => (
-                          <tr key={t.id} className="hover:bg-background/60 transition-colors">
-                            <td className="px-6 py-4">
+                        filteredTickets.map((t, index) => {
+                          const currentDay = t.created_at ? parseDate(t.created_at).toLocaleDateString() : 'Unknown Date';
+                          const prevDay = index > 0 && filteredTickets[index - 1].created_at 
+                            ? parseDate(filteredTickets[index - 1].created_at).toLocaleDateString() 
+                            : null;
+                          const isNewDay = currentDay !== prevDay;
+
+                          let displayDay = currentDay;
+                          const today = new Date().toLocaleDateString();
+                          const yesterday = new Date();
+                          yesterday.setDate(yesterday.getDate() - 1);
+                          if (currentDay === today) displayDay = 'Today';
+                          else if (currentDay === yesterday.toLocaleDateString()) displayDay = 'Yesterday';
+
+                          return (
+                            <React.Fragment key={t.id}>
+                              {isNewDay && (
+                                <tr className="bg-surface border-y border-border">
+                                  <td colSpan={8} className="px-6 py-2.5 text-[11px] font-black text-muted tracking-widest uppercase bg-secondary/5">
+                                    {displayDay}
+                                  </td>
+                                </tr>
+                              )}
+                              <tr className="hover:bg-background/60 transition-colors">
+                                <td className="px-6 py-4">
                               <span className="font-mono font-extrabold text-sm text-primary">
                                 {t.ticket_number}
                               </span>
@@ -746,7 +844,7 @@ export const Dashboard = () => {
                               {t.customer_phone || '—'}
                             </td>
                             <td className="px-6 py-4 font-mono text-[11px] text-muted">
-                              {t.created_at ? new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                              {t.created_at ? parseDate(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
                             </td>
                             <td className="px-6 py-4 font-semibold text-muted">
                               {t.called_to_counter_id || '—'}
@@ -794,7 +892,9 @@ export const Dashboard = () => {
                               </div>
                             </td>
                           </tr>
-                        ))
+                            </React.Fragment>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
