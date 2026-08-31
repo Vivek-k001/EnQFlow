@@ -178,6 +178,22 @@ export const LoginPage = () => {
             </button>
           </form>
 
+          {/* Quick Demo Fill Helper */}
+          <div className="mt-5 pt-4 border-t border-border/60 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('receptionist@abchealth.com');
+                setPassword('recept123');
+                setErrorMsg(null);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Click to auto-fill default demo credentials</span>
+            </button>
+          </div>
+
         </div>
 
 

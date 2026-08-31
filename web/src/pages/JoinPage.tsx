@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getOrganizationServices, createQueueRequest } from '../services/api';
+import { getOrganizationServices, getPrimaryOrganization, createQueueRequest } from '../services/api';
 import { io } from 'socket.io-client';
 import { 
   Layers, 
@@ -23,6 +23,7 @@ const socket = io(`http://${window.location.hostname}:5000`);
 export const JoinPage = () => {
   const { organizationId } = useParams();
   const navigate = useNavigate();
+  const [resolvedOrgId, setResolvedOrgId] = useState<string | null>(null);
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -43,24 +44,54 @@ export const JoinPage = () => {
   };
 
   useEffect(() => {
-    if (!organizationId) {
-      setLoading(false);
-      return;
-    }
-    
-    getOrganizationServices(organizationId)
-      .then(res => {
-        if (res && res.length > 0) {
-          setServices(res);
-          setServiceId(res[0].id);
-        } else {
-          console.error('No services found for this organization');
+    let isMounted = true;
+
+    async function loadServices() {
+      try {
+        let orgId = organizationId;
+        
+        // If an organizationId is in URL, attempt to load services for it
+        if (orgId) {
+          try {
+            const res = await getOrganizationServices(orgId);
+            if (res && res.length > 0 && isMounted) {
+              setResolvedOrgId(orgId);
+              setServices(res);
+              setServiceId(res[0].id);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // If failed, fall through to primary org
+          }
         }
-      })
-      .catch((err) => {
-        console.error('Error fetching services:', err);
-      })
-      .finally(() => setLoading(false));
+
+        // Fallback: fetch primary organization
+        const primary = await getPrimaryOrganization().catch(() => null);
+        if (primary && primary.id) {
+          const res = await getOrganizationServices(primary.id).catch(() => []);
+          if (res && res.length > 0 && isMounted) {
+            setResolvedOrgId(primary.id);
+            setServices(res);
+            setServiceId(res[0].id);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error loading organization services:', err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadServices();
+
+    return () => {
+      isMounted = false;
+    };
   }, [organizationId]);
 
   useEffect(() => {
@@ -85,7 +116,7 @@ export const JoinPage = () => {
     }
   }, [requestId, navigate]);
 
-  if (!organizationId || (services.length === 0 && !loading)) {
+  if (!resolvedOrgId || (services.length === 0 && !loading)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <div className="glass-card-light p-8 rounded-3xl text-center max-w-md border border-border">
@@ -103,11 +134,11 @@ export const JoinPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serviceId || !name) return;
+    if (!serviceId || !name || !resolvedOrgId) return;
     
     setSubmitting(true);
     try {
-      const res = await createQueueRequest(organizationId || 'default-org', {
+      const res = await createQueueRequest(resolvedOrgId, {
         service_id: serviceId,
         customer_name: name,
         customer_phone: phone

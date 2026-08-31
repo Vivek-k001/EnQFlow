@@ -12,7 +12,7 @@
   "description": "",
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "^11.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

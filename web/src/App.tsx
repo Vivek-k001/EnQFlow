@@ -8,10 +8,11 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/join/:organizationId" element={<JoinPage />} />
+        <Route path="/join" element={<JoinPage />} />
         <Route path="/queue/:ticketId" element={<QueuePage />} />
         <Route path="/display/:organizationId" element={<DisplayPage />} />
-        {/* Default route for demo purposes */}
-        <Route path="*" element={<Navigate to="/join/ac003c02-db2a-4498-93e6-7a02cb7341d9" replace />} />
+        <Route path="/display" element={<DisplayPage />} />
+        <Route path="*" element={<JoinPage />} />
       </Routes>
     </BrowserRouter>
   );

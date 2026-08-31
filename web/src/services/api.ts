@@ -1,5 +1,11 @@
 const API_BASE = `http://${window.location.hostname}:5000/api`;
 
+export const getPrimaryOrganization = async () => {
+  const res = await fetch(`${API_BASE}/organizations/primary`);
+  if (!res.ok) throw new Error('Failed to load primary organization');
+  return res.json();
+};
+
 export const getOrganizationServices = async (orgId: string) => {
   const res = await fetch(`${API_BASE}/organizations/${orgId}/services`);
   if (!res.ok) throw new Error('Failed to load services');

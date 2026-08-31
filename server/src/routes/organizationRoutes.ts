@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { getOrganizationInfo, getServices, getCounters } from '../controllers/organizationController';
+import { getOrganizationInfo, getServices, getCounters, getPrimaryOrganization } from '../controllers/organizationController';
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-// Public route for customer web app to fetch services by org ID
+// Public routes for customer web app
+router.get('/primary', getPrimaryOrganization);
 router.get('/:organizationId/services', getServices);
 
 // Protected routes for desktop/admin app
