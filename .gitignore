@@ -8,3 +8,9 @@ data/*.sqlite-journal
 data/*.sqlite-wal
 data/*.sqlite-shm
 .DS_Store
+
+# Video files
+*.mp4
+*.webm
+_frames/
+_video_tmp/

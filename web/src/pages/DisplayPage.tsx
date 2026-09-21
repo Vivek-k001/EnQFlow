@@ -8,11 +8,12 @@ import {
   Megaphone
 } from 'lucide-react';
 
-const socket = io('http://localhost:5000');
+const socket = io('http://127.0.0.1:5005');
 
 export const DisplayPage = () => {
   const [servingList, setServingList] = useState<{ticket: string, counter: string, time: string}[]>([]);
   const [lastCalled, setLastCalled] = useState<{ticket: string, counter: string} | null>(null);
+  const [nextTicket, setNextTicket] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<string>(new Date().toLocaleTimeString());
 
   useEffect(() => {
@@ -24,7 +25,8 @@ export const DisplayPage = () => {
 
   useEffect(() => {
     socket.on('queue:customer-called', (data) => {
-      fetch(`http://localhost:5000/api/queue/tickets/${data.id}`)
+      setNextTicket(data.next_ticket || null);
+      fetch(`http://127.0.0.1:5005/api/queue/tickets/${data.id}`)
         .then(res => res.json())
         .then(ticket => {
           const newCalled = { 
@@ -117,6 +119,18 @@ export const DisplayPage = () => {
                 <span className="underline decoration-white/40">{lastCalled.counter}</span>
               </div>
             </div>
+
+            {nextTicket && (
+              <div className="mt-8 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
+                <div className="inline-flex flex-col items-center gap-1">
+                  <span className="text-sm font-bold text-muted uppercase tracking-widest">Up Next</span>
+                  <div className="text-3xl font-black text-foreground/80 tracking-tight">
+                    {nextTicket}
+                    <span className="text-lg font-medium text-muted ml-3">— please be ready</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center space-y-4 py-16">

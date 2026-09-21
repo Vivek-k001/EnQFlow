@@ -11,6 +11,7 @@ import {
   getCounters,
   getOrganizationInfo
 } from '../services/api';
+import { ReceiptPrinter, type ReceiptPrinterStage } from '../components/ReceiptPrinter';
 import { io } from 'socket.io-client';
 import { 
   Layers, 
@@ -38,7 +39,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-const socket = io('http://localhost:5000');
+const socket = io('http://127.0.0.1:5005');
 
 const parseDate = (dateStr: string) => {
   if (!dateStr) return new Date();
@@ -58,6 +59,8 @@ export const Dashboard = () => {
   const [notification, setNotification] = useState<string | null>(null);
   const [callingNext, setCallingNext] = useState(false);
   const [isConnected, setIsConnected] = useState(socket.connected);
+  const [receiptStage, setReceiptStage] = useState<ReceiptPrinterStage>("processing");
+  const [registryReceiptTicket, setRegistryReceiptTicket] = useState<any>(null);
 
   // Queue Registry Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -655,23 +658,100 @@ export const Dashboard = () => {
 
                       {/* Operational Controls */}
                       <div className="space-y-2.5">
-                        {activeTicket.status !== 'SERVING' && (
-                          <button
-                            onClick={() => handleStatusUpdate('SERVING')}
-                            className="w-full py-3.5 rounded-xl bg-secondary hover:bg-secondary-light text-white font-extrabold text-sm transition-all shadow-md shadow-secondary/25 hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
-                          >
-                            <Play className="w-4 h-4 fill-white" />
-                            Start Serving Customer
-                          </button>
+                        {activeTicket.status !== 'SERVING' ? (
+                          <>
+                            <button
+                              onClick={() => handleStatusUpdate('SERVING')}
+                              className="w-full py-3.5 rounded-xl bg-secondary hover:bg-secondary-light text-white font-extrabold text-sm transition-all shadow-md shadow-secondary/25 hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                            >
+                              <Play className="w-4 h-4 fill-white" />
+                              Start Serving Customer
+                            </button>
+                            <button
+                              onClick={() => handleStatusUpdate('COMPLETED')}
+                              className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-extrabold text-sm transition-all shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              Complete Service & Close
+                            </button>
+                          </>
+                        ) : (
+                          <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                            {activeTicket.service_prefix === 'B' ? (
+                              <div className="flex flex-col items-center">
+                                <ReceiptPrinter.Root stage={receiptStage}>
+                                  <ReceiptPrinter.Machine>
+                                    <ReceiptPrinter.Header>
+                                      <div className="text-xs font-bold text-muted flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-primary"></div>BILLING</div>
+                                    </ReceiptPrinter.Header>
+                                    <ReceiptPrinter.Screen>
+                                      <div className="space-y-4">
+                                        <div className="flex justify-between text-xs">
+                                          <div>
+                                            <p className="font-bold">{activeTicket.customer_name}</p>
+                                            <p className="text-muted">Consultation Fee</p>
+                                          </div>
+                                          <strong className="text-primary text-sm">$50.00</strong>
+                                        </div>
+                                        <ReceiptPrinter.Status />
+                                        
+                                        <div className="flex gap-2 mt-2 pt-2 border-t border-border">
+                                          {receiptStage === 'processing' && (
+                                            <button
+                                              onClick={() => {
+                                                setReceiptStage('printing');
+                                                setTimeout(() => setReceiptStage('complete'), 2500);
+                                              }}
+                                              className="flex-1 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95"
+                                            >
+                                              Print
+                                            </button>
+                                          )}
+                                          <button
+                                            onClick={() => {
+                                              setReceiptStage('processing');
+                                              handleStatusUpdate('COMPLETED');
+                                            }}
+                                            disabled={receiptStage === 'printing'}
+                                            className={`flex-1 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1 ${
+                                              receiptStage === 'printing' ? 'bg-surface text-muted cursor-not-allowed opacity-75' : 'bg-surface text-foreground hover:bg-background border border-border active:scale-95'
+                                            }`}
+                                          >
+                                            <CheckCircle2 className="w-3 h-3" />
+                                            {receiptStage === 'complete' ? 'Finish' : 'Skip'}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </ReceiptPrinter.Screen>
+                                  </ReceiptPrinter.Machine>
+                                  <ReceiptPrinter.Output>
+                                    <ReceiptPrinter.Paper>
+                                      <h2 className="text-lg font-bold border-b border-black pb-2 mb-2 text-center uppercase">Receipt</h2>
+                                      <div className="text-xs space-y-1 mb-4">
+                                        <p>Date: {new Date().toLocaleDateString()}</p>
+                                        <p>Ticket: {activeTicket.ticket_number}</p>
+                                        <p>Customer: {activeTicket.customer_name}</p>
+                                      </div>
+                                      <div className="flex justify-between font-bold border-t border-black pt-2 mt-4 text-sm">
+                                        <span>TOTAL</span>
+                                        <span>$50.00</span>
+                                      </div>
+                                      <p className="text-center text-[10px] mt-4 italic">Thank you for visiting.</p>
+                                    </ReceiptPrinter.Paper>
+                                  </ReceiptPrinter.Output>
+                                </ReceiptPrinter.Root>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleStatusUpdate('COMPLETED')}
+                                className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-extrabold text-sm transition-all shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                Complete Service & Close
+                              </button>
+                            )}
+                          </div>
                         )}
-
-                        <button
-                          onClick={() => handleStatusUpdate('COMPLETED')}
-                          className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-extrabold text-sm transition-all shadow-lg shadow-primary/25 hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          Complete Service & Close
-                        </button>
 
                         <div className="grid grid-cols-2 gap-2.5">
                           <button
@@ -889,6 +969,14 @@ export const Dashboard = () => {
                                     Cancel
                                   </button>
                                 )}
+                                {t.service_prefix === 'B' && (
+                                  <button
+                                    onClick={() => setRegistryReceiptTicket(t)}
+                                    className="px-2.5 py-1 rounded-lg bg-surface border border-border hover:border-primary/50 text-primary text-[11px] font-bold transition-all shadow-sm cursor-pointer"
+                                  >
+                                    Print Bill
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -984,6 +1072,84 @@ export const Dashboard = () => {
 
         </div>
       </main>
+
+      {/* Registry Receipt Modal */}
+      {registryReceiptTicket && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-surface border border-border p-8 rounded-3xl shadow-2xl relative max-w-md w-full mx-4">
+            <button 
+              onClick={() => setRegistryReceiptTicket(null)}
+              className="absolute top-4 right-4 p-2 bg-surface text-muted hover:text-foreground rounded-full border border-border transition-colors cursor-pointer"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+            <div className="flex flex-col items-center pt-2">
+              <ReceiptPrinter.Root stage="printing">
+                <ReceiptPrinter.Machine>
+                  <ReceiptPrinter.Header>
+                    <div className="text-xs font-bold text-muted flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-primary"></div>BILLING</div>
+                  </ReceiptPrinter.Header>
+                  <ReceiptPrinter.Screen>
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-xs">
+                        <div>
+                          <p className="font-bold">{registryReceiptTicket.customer_name}</p>
+                          <p className="text-muted">Consultation Fee</p>
+                        </div>
+                        <strong className="text-primary text-sm">$50.00</strong>
+                      </div>
+                      <ReceiptPrinter.Status>Ready</ReceiptPrinter.Status>
+                      
+                      <div className="flex gap-2 mt-2 pt-2 border-t border-border">
+                        {receiptStage === 'processing' && (
+                          <button
+                            onClick={() => {
+                              setReceiptStage('printing');
+                              setTimeout(() => setReceiptStage('complete'), 2500);
+                            }}
+                            className="flex-1 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95"
+                          >
+                            Print Copy
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            setReceiptStage('processing');
+                            setRegistryReceiptTicket(null);
+                          }}
+                          disabled={receiptStage === 'printing'}
+                          className={`flex-1 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1 ${
+                            receiptStage === 'printing' ? 'bg-surface text-muted cursor-not-allowed opacity-75' : 'bg-surface text-foreground hover:bg-background border border-border active:scale-95'
+                          }`}
+                        >
+                          <XCircle className="w-3 h-3" />
+                          {receiptStage === 'complete' ? 'Close' : 'Cancel'}
+                        </button>
+                      </div>
+                    </div>
+                  </ReceiptPrinter.Screen>
+                </ReceiptPrinter.Machine>
+                <ReceiptPrinter.Output>
+                  <ReceiptPrinter.Paper>
+                    <h2 className="text-lg font-bold border-b border-black pb-2 mb-2 text-center uppercase">Receipt (Copy)</h2>
+                    <div className="text-xs space-y-1 mb-4">
+                      <p>Date: {registryReceiptTicket.created_at ? new Date(registryReceiptTicket.created_at).toLocaleDateString() : new Date().toLocaleDateString()}</p>
+                      <p>Ticket: {registryReceiptTicket.ticket_number}</p>
+                      <p>Customer: {registryReceiptTicket.customer_name}</p>
+                    </div>
+                    <div className="flex justify-between font-bold border-t border-black pt-2 mt-4 text-sm">
+                      <span>TOTAL</span>
+                      <span>$50.00</span>
+                    </div>
+                    <p className="text-center text-[10px] mt-4 italic">Thank you for visiting.</p>
+                  </ReceiptPrinter.Paper>
+                </ReceiptPrinter.Output>
+              </ReceiptPrinter.Root>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

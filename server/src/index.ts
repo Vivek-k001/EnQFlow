@@ -44,10 +44,10 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5005;
 
 seedDb().catch(console.error);
 
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`EnQFlow Server is running on port ${PORT}`);
 });

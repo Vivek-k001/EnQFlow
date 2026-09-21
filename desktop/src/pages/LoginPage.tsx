@@ -25,7 +25,7 @@ export const LoginPage = () => {
     let mounted = true;
     const checkServer = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/health');
+        const res = await fetch('http://127.0.0.1:5005/api/health');
         if (mounted) setServerStatus(res.ok ? 'connected' : 'disconnected');
       } catch (err) {
         if (mounted) setServerStatus('disconnected');

@@ -1,0 +1,41 @@
+# Service-Specific Receptionist Actions
+
+You are completely right to point this out! Right now, the receptionist just clicks "Call Next" and "Complete" for everything. To make this a truly powerful tool, the receptionist should be able to perform actual tasks depending on what service the customer requested.
+
+## What Services Can a Receptionist Do?
+
+Besides billing, here are some realistic actions a receptionist can do for the other services:
+
+1.  **General Consultation (G)**
+    -   **Action:** Collect Initial Vitals / Reason for Visit.
+    -   **Details:** The receptionist can ask the customer for a brief reason for their visit, or take basic vitals (weight, blood pressure) before they see the doctor.
+
+2.  **Laboratory (L)**
+    -   **Action:** Test Requisition / Barcode Generation.
+    -   **Details:** The receptionist selects which specific lab tests the customer needs (e.g., Blood Test, X-Ray) and "generates a lab order".
+
+3.  **Billing (B)**
+    -   **Action:** Generate Invoice & Process Payment.
+    -   **Details:** (As you suggested) The system will autofill the customer's name and phone number. The receptionist enters the amount and description, and clicks "Generate Bill".
+
+4.  **Pharmacy (P)**
+    -   **Action:** Prescription Verification.
+    -   **Details:** The receptionist enters a Prescription ID or Medicine List to prepare the order for dispensing.
+
+## Proposed Changes
+
+### [MODIFY] Dashboard.tsx
+We will update the "Active Serving Card" in the Receptionist Dashboard. 
+When the receptionist clicks **"Start Serving Customer"**, instead of just showing a "Complete" button, a new **Service Action Panel** will slide down.
+
+This panel will dynamically change based on the service:
+-   **If Billing:** Show an Invoice Generator form (pre-filled with Customer Name and Phone).
+-   **If General:** Show a Vitals/Notes input form.
+-   **If Lab:** Show a checklist of common lab tests.
+-   **If Pharmacy:** Show a Prescription ID input field.
+
+Once the receptionist fills out the specific form, they click a combined button like **"Generate Bill & Complete Service"** or **"Save Vitals & Complete Service"**.
+
+## Open Questions
+
+For now, these actions will be front-end only (they will clear when the ticket is completed, acting as a visual workflow for the receptionist). Should we also save this data (like the generated bill amount or the vitals) to the backend database so you can view it later? Or is a visual front-end workflow enough for the current scope?

@@ -15,7 +15,7 @@ import {
   QrCode
 } from 'lucide-react';
 
-const socket = io(`http://${window.location.hostname}:5000`);
+const socket = io(`http://${window.location.hostname}:5005`);
 
 export const QueuePage = () => {
   const { ticketId } = useParams();

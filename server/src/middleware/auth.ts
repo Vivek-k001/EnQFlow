@@ -6,8 +6,10 @@ export interface AuthRequest extends Request {
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
+  console.log(`[AUTH] Incoming request to ${req.method} ${req.url}`);
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log(`[AUTH] Missing or invalid header: ${authHeader}`);
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -19,8 +21,10 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   try {
     const decoded = verifyToken(token);
     req.user = decoded;
+    console.log(`[AUTH] Success for user ${decoded.email || decoded.id}`);
     next();
   } catch (error) {
+    console.log(`[AUTH] JWT verify failed:`, error);
     return res.status(401).json({ error: 'Invalid token' });
   }
 };

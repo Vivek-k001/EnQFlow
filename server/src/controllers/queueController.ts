@@ -258,11 +258,20 @@ export const callNext = (req: AuthRequest, res: Response) => {
       WHERE id = ?
     `).run(actualCounterId, nextTicket.id);
 
+    // Fetch the new next ticket in line to show on the display
+    const nextInLineTicket = db.prepare(`
+      SELECT ticket_number 
+      FROM queue_tickets 
+      WHERE organization_id = ? AND status = 'WAITING' 
+      ORDER BY created_at ASC LIMIT 1
+    `).get(orgId) as { ticket_number: string } | undefined;
+
     const fullTicket = {
       ...nextTicket,
       status: 'CALLED',
       called_to_counter_id: counterName,
-      called_at: new Date().toISOString()
+      called_at: new Date().toISOString(),
+      next_ticket: nextInLineTicket ? nextInLineTicket.ticket_number : null
     };
 
     io.emit('queue:updated');
