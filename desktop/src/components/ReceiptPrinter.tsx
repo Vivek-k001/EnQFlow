@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, ComponentPropsWithoutRef } from "react";
+import { createContext, useContext, type ReactNode, type ComponentPropsWithoutRef } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "../utils/classname-helper";

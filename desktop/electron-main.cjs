@@ -1,17 +1,30 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.enqflow.desktop');
+}
 
 function createWindow() {
+  const iconIco = path.join(__dirname, 'public', 'logo.ico');
+  const iconPng = path.join(__dirname, 'public', 'logo.png');
+  const iconPath = process.platform === 'win32' && fs.existsSync(iconIco) ? iconIco : iconPng;
+
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
     autoHideMenuBar: true,
-    icon: path.join(__dirname, 'public', 'logo.png'),
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
     }
   });
+
+  if (fs.existsSync(iconPath)) {
+    mainWindow.setIcon(iconPath);
+  }
 
   const isDev = !app.isPackaged;
   if (isDev) {

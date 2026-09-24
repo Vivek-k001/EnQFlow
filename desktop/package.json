@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "concurrently -k \"vite --port 5174\" \"npm run electron\"",
     "electron": "wait-on tcp:5174 && electron .",
+    "electron:dev": "npm run dev",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
@@ -28,6 +29,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^13.2.0",
     "lucide-react": "^1.34.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",

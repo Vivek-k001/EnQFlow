@@ -12,9 +12,9 @@ import {
   getOrganizationInfo
 } from '../services/api';
 import { ReceiptPrinter, type ReceiptPrinterStage } from '../components/ReceiptPrinter';
+import { QRCodeSVG } from 'qrcode.react';
 import { io } from 'socket.io-client';
 import { 
-  Layers, 
   LogOut, 
   Bell, 
   UserCheck, 
@@ -30,13 +30,11 @@ import {
   Sliders,
   Megaphone,
   Search,
-  Check,
   UserX,
   Play,
-  ArrowRight,
-  TrendingUp,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  QrCode
 } from 'lucide-react';
 
 const socket = io('http://127.0.0.1:5005');
@@ -115,8 +113,13 @@ export const Dashboard = () => {
   useEffect(() => {
     fetchInitialData();
 
-    socket.on('connect', () => setIsConnected(true));
-    socket.on('disconnect', () => setIsConnected(false));
+    const syncStatus = () => setIsConnected(socket.connected);
+    syncStatus();
+
+    socket.on('connect', syncStatus);
+    socket.on('disconnect', syncStatus);
+    socket.io.on('reconnect', syncStatus);
+    const interval = setInterval(syncStatus, 2000);
 
     socket.on('queue:request-created', (newReq) => {
       setRequests(prev => [newReq, ...prev.filter(r => r.id !== newReq.id)]);
@@ -170,6 +173,7 @@ export const Dashboard = () => {
     });
 
     return () => {
+      clearInterval(interval);
       socket.off('queue:request-created');
       socket.off('queue:request-approved');
       socket.off('queue:request-declined');
@@ -179,8 +183,9 @@ export const Dashboard = () => {
       socket.off('queue:customer-completed');
       socket.off('queue:customer-cancelled');
       socket.off('queue:updated');
-      socket.off('connect');
-      socket.off('disconnect');
+      socket.off('connect', syncStatus);
+      socket.off('disconnect', syncStatus);
+      socket.io.off('reconnect', syncStatus);
     };
   }, [selectedCounter, activeTicket?.id]);
 
@@ -253,7 +258,6 @@ export const Dashboard = () => {
   // Metrics computation
   const waitingTickets = tickets.filter(t => t.status === 'WAITING');
   const completedToday = tickets.filter(t => t.status === 'COMPLETED');
-  const activeServingCount = tickets.filter(t => t.status === 'CALLED' || t.status === 'SERVING').length;
   const avgWaitMinutes = tickets.length > 0 
     ? Math.round(tickets.reduce((acc, curr) => acc + (curr.average_service_time_minutes || 8), 0) / tickets.length)
     : 8;
@@ -390,6 +394,63 @@ export const Dashboard = () => {
               <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
             </button>
           </nav>
+        </div>
+
+        {/* Customer Self Check-In QR Code Card */}
+        <div className="my-auto py-3">
+          <div className="bg-background border border-border hover:border-primary/40 rounded-2xl p-4 shadow-sm flex flex-col items-center text-center transition-all group">
+            {/* Header */}
+            <div className="w-full flex items-center justify-center gap-2 mb-3">
+              <QrCode className="w-4 h-4 text-primary" />
+              <span className="text-xs font-extrabold uppercase tracking-wide text-foreground">
+                Customer Check-In
+              </span>
+            </div>
+
+            {/* Clickable QR Code */}
+            {(() => {
+              const host = (orgInfo?.server_ip && orgInfo.server_ip !== 'localhost')
+                ? orgInfo.server_ip
+                : (window.location.hostname && window.location.hostname !== 'localhost' ? window.location.hostname : 'localhost');
+              const customerWebUrl = orgInfo?.id 
+                ? `http://${host}:5173/join/${orgInfo.id}` 
+                : `http://${host}:5173/join`;
+
+              const localWebUrl = orgInfo?.id 
+                ? `http://localhost:5173/join/${orgInfo.id}` 
+                : `http://localhost:5173/join`;
+
+              const handleOpenWebCheckIn = () => {
+                try {
+                  if ((window as any).require) {
+                    const { shell } = (window as any).require('electron');
+                    if (shell && shell.openExternal) {
+                      shell.openExternal(localWebUrl);
+                      return;
+                    }
+                  }
+                } catch {
+                  // Fallback
+                }
+                window.open(localWebUrl, '_blank');
+              };
+
+              return (
+                <div 
+                  onClick={handleOpenWebCheckIn}
+                  title="Click to open Customer Check-in in browser"
+                  className="p-3 bg-white rounded-2xl shadow-sm border border-slate-200 cursor-pointer transition-transform group-hover:scale-[1.02] active:scale-95 flex items-center justify-center w-full"
+                >
+                  <QRCodeSVG 
+                    value={customerWebUrl} 
+                    size={178} 
+                    level="M" 
+                    includeMargin={false}
+                  />
+                </div>
+              );
+            })()}
+          </div>
         </div>
 
         {/* Sidebar Bottom Actions */}

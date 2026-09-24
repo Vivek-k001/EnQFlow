@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getOrganizationServices, getPrimaryOrganization, createQueueRequest } from '../services/api';
 import { io } from 'socket.io-client';
 import { 
-  Layers, 
   User, 
   Phone, 
   Clock, 
@@ -209,57 +208,57 @@ export const JoinPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans selection:bg-secondary selection:text-white">
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-3 sm:p-4 relative overflow-y-auto font-sans selection:bg-secondary selection:text-white">
       {/* Background Gradients */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/15 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-md relative z-10 my-8">
+      <div className="w-full max-w-md relative z-10 my-auto py-3">
         
         {/* Header Branding */}
-        <div className="text-center mb-8">
-          <img src="/logo.png" alt="EnQFlow Icon" className="w-16 h-16 mx-auto object-contain shadow-md rounded-2xl mb-3" />
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
+        <div className="text-center mb-4">
+          <img src="/logo.png" alt="EnQFlow Icon" className="w-13 h-13 mx-auto object-contain shadow-md rounded-2xl mb-2" />
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
             EnQ<span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Flow</span>
           </h1>
-          <p className="text-muted text-xs font-semibold uppercase tracking-wider mt-1">
+          <p className="text-muted text-xs font-semibold uppercase tracking-wider mt-0.5">
             Smart Contactless Check-In
           </p>
         </div>
 
         {/* Join Form Card */}
-        <div className="glass-card-light rounded-3xl p-7 shadow-xl border border-border">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="glass-card-light rounded-3xl p-6 shadow-xl border border-border">
+          <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Service Selection */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
                 1. Select Desired Service
               </label>
-              <div className="grid grid-cols-1 gap-2.5">
+              <div className="space-y-2">
                 {services.map((s) => (
                   <label
                     key={s.id}
                     onClick={() => setServiceId(s.id)}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                    className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer ${
                       serviceId === s.id
-                        ? 'bg-secondary/10 border-secondary shadow-sm shadow-secondary/10'
+                        ? 'bg-secondary/10 border-secondary shadow-sm shadow-secondary/10 ring-1 ring-secondary/30'
                         : 'bg-surface border-border hover:border-secondary/40 hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-background border border-border shadow-sm">
+                      <div className="p-2 rounded-xl bg-background border border-border shadow-xs shrink-0">
                         {getServiceIcon(s.name)}
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-foreground">{s.name}</h4>
-                        <span className="text-[11px] text-muted flex items-center gap-1 font-medium">
-                          <Clock className="w-3 h-3 text-muted" />
+                        <h4 className="text-sm font-bold text-foreground leading-tight">{s.name}</h4>
+                        <span className="text-xs text-muted flex items-center gap-1 font-medium mt-0.5">
+                          <Clock className="w-3 h-3 text-muted shrink-0" />
                           Avg. ~{s.average_service_time_minutes || 10} mins
                         </span>
                       </div>
                     </div>
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-2 ${
                       serviceId === s.id ? 'border-secondary bg-secondary' : 'border-slate-300'
                     }`}>
                       {serviceId === s.id && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
@@ -293,7 +292,7 @@ export const JoinPage = () => {
                   title="Name can only contain letters and spaces"
                   placeholder="Enter your name"
                   required
-                  className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-sm"
+                  className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -321,9 +320,9 @@ export const JoinPage = () => {
                   pattern="^[0-9]{10}$"
                   maxLength={10}
                   title="Phone number must be exactly 10 digits"
-                  placeholder="Enter phone number"
+                  placeholder="Enter 10-digit phone number"
                   required
-                  className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-sm"
+                  className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground placeholder-muted focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -332,7 +331,7 @@ export const JoinPage = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-2 group relative inline-flex items-center justify-center px-6 py-4 text-sm font-extrabold text-white transition-all bg-primary hover:bg-primary-hover rounded-2xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+              className="w-full mt-2 group relative inline-flex items-center justify-center px-6 py-3.5 text-sm font-extrabold text-white transition-all bg-primary hover:bg-primary-hover rounded-2xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
             >
               <span className="flex items-center gap-2">
                 {submitting ? (
@@ -352,7 +351,7 @@ export const JoinPage = () => {
         </div>
 
         {/* Footer info */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted font-medium">
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted font-medium">
           <ShieldCheck className="w-3.5 h-3.5 text-secondary" />
           <span>Real-Time EnQFlow Queue Engine</span>
         </div>

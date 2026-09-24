@@ -2,14 +2,31 @@ import { Request, Response } from 'express';
 import { db } from '../database/index';
 import { z } from 'zod';
 import { AuthRequest } from '../middleware/auth';
+import os from 'os';
+
+const getLocalIp = () => {
+  const nets = os.networkInterfaces();
+  let fallbackIp: string | null = null;
+  for (const k of Object.keys(nets)) {
+    for (const n of nets[k] || []) {
+      if (n.family === 'IPv4' && !n.internal && !k.includes('vEthernet') && !k.includes('Virtual') && !k.includes('Switch')) {
+        if (k.toLowerCase().includes('wi-fi') || k.toLowerCase().includes('wifi') || k.toLowerCase().includes('wlan')) {
+          return n.address;
+        }
+        if (!fallbackIp) fallbackIp = n.address;
+      }
+    }
+  }
+  return fallbackIp || 'localhost';
+};
 
 export const getPrimaryOrganization = (req: Request, res: Response) => {
   try {
-    const org = db.prepare('SELECT id, name, logo_url, contact_info, operating_hours FROM organizations LIMIT 1').get();
+    const org = db.prepare('SELECT id, name, logo_url, contact_info, operating_hours FROM organizations LIMIT 1').get() as any;
     if (!org) {
       return res.status(404).json({ error: 'No organization found' });
     }
-    res.json(org);
+    res.json({ ...org, server_ip: getLocalIp() });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -18,8 +35,8 @@ export const getPrimaryOrganization = (req: Request, res: Response) => {
 export const getOrganizationInfo = (req: AuthRequest, res: Response) => {
   try {
     const orgId = req.user.organization_id;
-    const org = db.prepare('SELECT id, name, logo_url, contact_info, operating_hours FROM organizations WHERE id = ?').get(orgId);
-    res.json(org);
+    const org = db.prepare('SELECT id, name, logo_url, contact_info, operating_hours FROM organizations WHERE id = ?').get(orgId) as any;
+    res.json({ ...org, server_ip: getLocalIp() });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }

@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { login } from '../services/api';
 import { 
-  Layers, 
   Mail, 
   Lock, 
   ArrowRight, 
-  ShieldCheck, 
   Eye, 
   EyeOff,
   Sparkles

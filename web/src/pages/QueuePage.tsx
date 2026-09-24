@@ -1,18 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getTicket } from '../services/api';
 import { io } from 'socket.io-client';
 import { 
-  Layers, 
   Clock, 
-  Users, 
-  Radio, 
   CheckCircle2, 
   ArrowLeft, 
-  Sparkles, 
   AlertCircle,
-  Megaphone,
-  QrCode
+  Megaphone
 } from 'lucide-react';
 
 const socket = io(`http://${window.location.hostname}:5005`);
@@ -21,8 +16,8 @@ export const QueuePage = () => {
   const { ticketId } = useParams();
   const [ticket, setTicket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [calledAlert, setCalledAlert] = useState(false);
-  const [completedAlert, setCompletedAlert] = useState(false);
+  const hasCalledAlertRef = useRef(false);
+  const hasCompletedAlertRef = useRef(false);
 
   const calledAudioRef = useRef<HTMLAudioElement | null>(null);
   const completedAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -38,41 +33,37 @@ export const QueuePage = () => {
       .then(data => {
         setTicket(data);
         if (data.status === 'CALLED') {
-          setCalledAlert(prev => {
-            if (!prev) {
-              // Triple ding!
-              let count = 0;
-              const playDing = () => {
-                if (calledAudioRef.current) {
-                  calledAudioRef.current.currentTime = 0;
-                  calledAudioRef.current.play().catch(() => {});
-                }
-              };
+          if (!hasCalledAlertRef.current) {
+            hasCalledAlertRef.current = true;
+            // Triple ding!
+            let count = 0;
+            const playDing = () => {
+              if (calledAudioRef.current) {
+                calledAudioRef.current.currentTime = 0;
+                calledAudioRef.current.play().catch(() => {});
+              }
+            };
+            playDing();
+            const interval = setInterval(() => {
+              count++;
+              if (count >= 2) clearInterval(interval);
               playDing();
-              const interval = setInterval(() => {
-                count++;
-                if (count >= 2) clearInterval(interval);
-                playDing();
-              }, 500);
-            }
-            return true;
-          });
+            }, 500);
+          }
         }
         
         if (data.status === 'COMPLETED' || data.status === 'SERVING') {
-          setCompletedAlert(prev => {
-            if (!prev) {
-              if (calledAudioRef.current) {
-                calledAudioRef.current.pause();
-                calledAudioRef.current.currentTime = 0;
-              }
-              if (completedAudioRef.current) {
-                completedAudioRef.current.currentTime = 0;
-                completedAudioRef.current.play().catch(() => {});
-              }
+          if (!hasCompletedAlertRef.current) {
+            hasCompletedAlertRef.current = true;
+            if (calledAudioRef.current) {
+              calledAudioRef.current.pause();
+              calledAudioRef.current.currentTime = 0;
             }
-            return true;
-          });
+            if (completedAudioRef.current) {
+              completedAudioRef.current.currentTime = 0;
+              completedAudioRef.current.play().catch(() => {});
+            }
+          }
         }
       })
       .catch(console.error)
