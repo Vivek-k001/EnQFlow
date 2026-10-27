@@ -10,9 +10,23 @@ import {
 const socket = io('http://127.0.0.1:5005');
 
 export const DisplayPage = () => {
-  const [servingList, setServingList] = useState<{ticket: string, counter: string, time: string}[]>([]);
-  const [lastCalled, setLastCalled] = useState<{ticket: string, counter: string} | null>(null);
-  const [nextTicket, setNextTicket] = useState<string | null>(null);
+  const [servingList, setServingList] = useState<{ticket: string, counter: string, time: string}[]>([
+    { ticket: 'G-004', counter: 'Counter 2', time: '20:45' },
+    { ticket: 'L-003', counter: 'Counter 1', time: '20:40' },
+    { ticket: 'B-002', counter: 'Counter 3', time: '20:35' },
+    { ticket: 'P-001', counter: 'Counter 1', time: '20:30' },
+  ]);
+  const [lastCalled, setLastCalled] = useState<{ticket: string, counter: string} | null>({
+    ticket: 'G-005',
+    counter: 'Counter 1'
+  });
+  const [nextTicket, setNextTicket] = useState<string | null>('L-006');
+  const [waitingList, setWaitingList] = useState<{ticket: string, service: string, waitTime: string}[]>([
+    { ticket: 'L-006', service: 'Laboratory', waitTime: '~4 mins' },
+    { ticket: 'G-007', service: 'General Consultation', waitTime: '~10 mins' },
+    { ticket: 'B-008', service: 'Billing', waitTime: '~14 mins' },
+    { ticket: 'P-009', service: 'Pharmacy', waitTime: '~18 mins' },
+  ]);
   const [currentTime, setCurrentTime] = useState<string>(new Date().toLocaleTimeString());
 
   useEffect(() => {
@@ -97,53 +111,110 @@ export const DisplayPage = () => {
         </div>
       </header>
 
-      {/* Main Spotlight Board */}
-      <main className="flex-1 flex flex-col items-center justify-center my-10 relative z-10">
-        {lastCalled ? (
-          <div className="w-full max-w-4xl glass-card-light p-12 lg:p-16 rounded-[3rem] border border-border shadow-xl text-center relative overflow-hidden animate-in zoom-in-95 duration-500">
-            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-secondary to-accent"></div>
+      {/* Main Board Grid: Now Calling + Next in Line Queue */}
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 my-8 relative z-10 items-stretch">
+        {/* Left / Center: Main Spotlight Calling Ticket */}
+        <div className="lg:col-span-8 flex flex-col justify-center">
+          {lastCalled ? (
+            <div className="glass-card-light p-10 lg:p-14 rounded-[2.5rem] border border-border shadow-2xl text-center relative overflow-hidden animate-in zoom-in-95 duration-500">
+              <div className="absolute top-0 left-0 right-0 h-2.5 bg-gradient-to-r from-primary via-secondary to-accent"></div>
 
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-extrabold text-sm uppercase tracking-widest mb-6 animate-pulse">
-              <Megaphone className="w-4 h-4" />
-              NOW CALLING TICKET
-            </div>
-
-            <div className="text-[9rem] lg:text-[11rem] font-black leading-none text-foreground tracking-tight my-4">
-              {lastCalled.ticket}
-            </div>
-
-            <div className="mt-8">
-              <div className="inline-flex items-center gap-4 text-3xl lg:text-4xl font-extrabold text-white bg-primary px-10 py-5 rounded-2xl shadow-xl shadow-primary/30">
-                <span>Please proceed to</span>
-                <span className="underline decoration-white/40">{lastCalled.counter}</span>
+              <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-primary/10 border border-primary/25 text-primary font-black text-sm uppercase tracking-widest mb-4 animate-pulse shadow-sm">
+                <Megaphone className="w-5 h-5 text-primary" />
+                NOW SERVING TICKET
               </div>
-            </div>
 
-            {nextTicket && (
-              <div className="mt-8 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
-                <div className="inline-flex flex-col items-center gap-1">
-                  <span className="text-sm font-bold text-muted uppercase tracking-widest">Up Next</span>
-                  <div className="text-3xl font-black text-foreground/80 tracking-tight">
-                    {nextTicket}
-                    <span className="text-lg font-medium text-muted ml-3">— please be ready</span>
-                  </div>
+              <div className="text-[7.5rem] lg:text-[9.5rem] font-black leading-none text-foreground tracking-tight my-2">
+                {lastCalled.ticket}
+              </div>
+
+              <div className="mt-6">
+                <div className="inline-flex items-center gap-4 text-2xl lg:text-3xl font-extrabold text-white bg-primary px-8 py-4 rounded-2xl shadow-xl shadow-primary/30">
+                  <span>Please proceed to</span>
+                  <span className="underline decoration-white/40">{lastCalled.counter}</span>
                 </div>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center space-y-4 py-16">
-            <div className="w-20 h-20 bg-surface rounded-3xl flex items-center justify-center mx-auto text-muted border border-border shadow-sm">
-              <Radio className="w-10 h-10 animate-pulse text-secondary" />
+
+              {nextTicket && (
+                <div className="mt-8 pt-5 border-t border-border/60">
+                  <div className="inline-flex items-center gap-3">
+                    <span className="px-3 py-1 rounded-lg bg-amber-500/10 text-amber-600 font-extrabold text-xs uppercase tracking-wider border border-amber-500/20">
+                      Up Next
+                    </span>
+                    <span className="text-2xl font-black text-foreground">
+                      {nextTicket}
+                    </span>
+                    <span className="text-xs font-semibold text-muted">
+                      Please make your way toward the counter area
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-            <h2 className="text-3xl font-extrabold text-foreground tracking-tight">
-              Awaiting Next Customer Announcement
-            </h2>
-            <p className="text-sm text-muted max-w-md mx-auto font-medium">
-              Please take a seat and watch this screen. Your ticket number will be announced here when a counter is ready.
-            </p>
+          ) : (
+            <div className="text-center space-y-4 py-16 glass-card-light rounded-[2.5rem] border border-border p-8">
+              <div className="w-20 h-20 bg-surface rounded-3xl flex items-center justify-center mx-auto text-muted border border-border shadow-sm">
+                <Radio className="w-10 h-10 animate-pulse text-secondary" />
+              </div>
+              <h2 className="text-3xl font-extrabold text-foreground tracking-tight">
+                Awaiting Next Customer Announcement
+              </h2>
+              <p className="text-sm text-muted max-w-md mx-auto font-medium">
+                Please take a seat and watch this screen. Your ticket number will be announced here when a counter is ready.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Next in Line / Upcoming Waiting Customers */}
+        <div className="lg:col-span-4 flex flex-col justify-between glass-card-light p-6 lg:p-8 rounded-[2.5rem] border border-border shadow-xl">
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-border/60 mb-5">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h3 className="text-base font-extrabold text-foreground uppercase tracking-wider">
+                  Next in Line
+                </h3>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full bg-surface text-xs font-bold text-muted border border-border">
+                {waitingList.length} Waiting
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {waitingList.map((item, idx) => (
+                <div 
+                  key={idx}
+                  className="p-4 rounded-2xl bg-surface/80 border border-border flex items-center justify-between hover:border-primary/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-7 h-7 rounded-xl bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
+                      #{idx + 1}
+                    </span>
+                    <div>
+                      <div className="text-lg font-black text-foreground tracking-tight">
+                        {item.ticket}
+                      </div>
+                      <div className="text-xs text-muted font-medium">
+                        {item.service}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+                      {item.waitTime}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+
+          <div className="pt-4 mt-4 border-t border-border/60 flex items-center justify-between text-xs text-muted font-medium">
+            <span>Audio Announcement Chimes</span>
+            <span className="text-emerald-500 font-bold">● Active</span>
+          </div>
+        </div>
       </main>
 
       {/* Bottom Counter Grid / Recent Ticker */}
