@@ -10,23 +10,10 @@ import {
 const socket = io('http://127.0.0.1:5005');
 
 export const DisplayPage = () => {
-  const [servingList, setServingList] = useState<{ticket: string, counter: string, time: string}[]>([
-    { ticket: 'G-004', counter: 'Counter 2', time: '20:45' },
-    { ticket: 'L-003', counter: 'Counter 1', time: '20:40' },
-    { ticket: 'B-002', counter: 'Counter 3', time: '20:35' },
-    { ticket: 'P-001', counter: 'Counter 1', time: '20:30' },
-  ]);
-  const [lastCalled, setLastCalled] = useState<{ticket: string, counter: string} | null>({
-    ticket: 'G-005',
-    counter: 'Counter 1'
-  });
-  const [nextTicket, setNextTicket] = useState<string | null>('L-006');
-  const [waitingList, setWaitingList] = useState<{ticket: string, service: string, waitTime: string}[]>([
-    { ticket: 'L-006', service: 'Laboratory', waitTime: '~4 mins' },
-    { ticket: 'G-007', service: 'General Consultation', waitTime: '~10 mins' },
-    { ticket: 'B-008', service: 'Billing', waitTime: '~14 mins' },
-    { ticket: 'P-009', service: 'Pharmacy', waitTime: '~18 mins' },
-  ]);
+  const [servingList, setServingList] = useState<{ticket: string, counter: string, time: string}[]>([]);
+  const [lastCalled, setLastCalled] = useState<{ticket: string, counter: string} | null>(null);
+  const [nextTicket, setNextTicket] = useState<string | null>(null);
+  const [waitingList, setWaitingList] = useState<{ticket: string, service: string, waitTime: string}[]>([]);
   const [currentTime, setCurrentTime] = useState<string>(new Date().toLocaleTimeString());
 
   useEffect(() => {
@@ -182,31 +169,37 @@ export const DisplayPage = () => {
             </div>
 
             <div className="space-y-3">
-              {waitingList.map((item, idx) => (
-                <div 
-                  key={idx}
-                  className="p-4 rounded-2xl bg-surface/80 border border-border flex items-center justify-between hover:border-primary/40 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-7 h-7 rounded-xl bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
-                      #{idx + 1}
-                    </span>
-                    <div>
-                      <div className="text-lg font-black text-foreground tracking-tight">
-                        {item.ticket}
-                      </div>
-                      <div className="text-xs text-muted font-medium">
-                        {item.service}
+              {waitingList.length > 0 ? (
+                waitingList.map((item, idx) => (
+                  <div 
+                    key={idx}
+                    className="p-4 rounded-2xl bg-surface/80 border border-border flex items-center justify-between hover:border-primary/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-7 h-7 rounded-xl bg-primary/10 text-primary font-black text-xs flex items-center justify-center">
+                        #{idx + 1}
+                      </span>
+                      <div>
+                        <div className="text-lg font-black text-foreground tracking-tight">
+                          {item.ticket}
+                        </div>
+                        <div className="text-xs text-muted font-medium">
+                          {item.service}
+                        </div>
                       </div>
                     </div>
+                    <div className="text-right">
+                      <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+                        {item.waitTime}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
-                      {item.waitTime}
-                    </span>
-                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-xs text-muted font-medium">
+                  Queue is clear. No waiting tickets.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
