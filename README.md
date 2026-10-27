@@ -23,31 +23,59 @@ Instead of forcing customers to download an app or allowing remote abuse of open
 
 ## Visual Tour
 
-Here is a visual walkthrough of the EnQFlow system and its different real-time states:
+Here is a visual walkthrough of the EnQFlow system and its real-time views:
 
 ### 1. Live Reception Hub (Desktop App)
 ![Live Reception Hub](screenshots/desktop-live-reception-hub.png)
-**What it does:** The primary interface for receptionists to manage the daily queue. It displays real-time clinical metrics (arrivals, waiting count, served today) and allows the receptionist to approve incoming customer requests directly into the line. It also includes an active counter station module to immediately call the next customer with a single click.
+**What it does:** The primary cockpit for receptionists. Displays live metrics (incoming arrivals, currently waiting, counters in operation, completed count), a physical check-in QR code generator, real-time incoming arrival approvals, and an instant 1-click counter dispatch button.
 
 ### 2. Queue Registry (Desktop App)
 ![Queue Registry](screenshots/desktop-queue-registry.png)
-**What it does:** A comprehensive, searchable database of all tickets for the day. Receptionists can monitor the status of every customer (WAITING, CALLED, COMPLETED, CANCELLED) and take direct actions such as calling a specific customer out of turn or canceling a ticket.
+**What it does:** A searchable, filterable real-time registry of all tickets issued today. Receptionists can filter by status (`WAITING`, `CALLED/SERVING`, `COMPLETED`, `CANCELLED`), call customers out of turn, or manage cancellations.
 
-### 3. Customer Digital Pass - "Called" State (Web App)
-<div align="center">
-  <img src="screenshots/web-pass-called.png" alt="Customer Web Pass - Called" width="45%" />
-</div>
-**What it does:** When a receptionist calls the customer's ticket, the mobile web pass instantly updates with a prominent "IT'S YOUR TURN!" notification banner and plays an audio chime. The status pill pulses to guide the customer to their designated counter immediately.
+### 3. Counter Stations Dispatcher (Desktop App)
+![Counter Stations](screenshots/desktop-counter-stations.png)
+**What it does:** Allows multi-counter management. Receptionists can view the active status of each counter in the facility, switch active operating counters, and assign customer queues dynamically.
 
-### 4. Customer Digital Pass - "Completed" Tear (Web App)
+### 4. Reception Terminal Login (Desktop App)
+![Desktop Terminal Login](screenshots/desktop-login.png)
+**What it does:** Secure, token-authenticated staff login portal with organization validation and demo autofill credentials.
+
+### 5. Customer Digital Experience (Mobile Web App / PWA)
+
 <div align="center">
-  <img src="screenshots/web-pass-completed.png" alt="Customer Web Pass - Completed" width="45%" />
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <b>1. Mobile Contactless Check-In</b><br/><br/>
+        <img src="screenshots/web-join-queue.png" alt="Customer Join Queue" width="280px" />
+      </td>
+      <td align="center" width="33%">
+        <b>2. Verification Awaiting</b><br/><br/>
+        <img src="screenshots/web-pass-waiting.png" alt="Awaiting Staff Verification" width="280px" />
+      </td>
+      <td align="center" width="33%">
+        <b>3. "Called" Turn State</b><br/><br/>
+        <img src="screenshots/web-pass-called.png" alt="Ticket Called" width="280px" />
+      </td>
+    </tr>
+  </table>
 </div>
-**What it does:** Once the service is finished and the receptionist closes the ticket, the digital web pass simulates a physical paper tear. Using CSS animations, the ticket splits in half along the jagged perforation line, and a red "SERVED" watermark stamp slams onto the top stub, providing a satisfying, tactile conclusion to the customer's journey.
+
+### 6. Digital Perforated Pass - "Completed" Tear Physics
+<div align="center">
+  <img src="screenshots/web-pass-completed.png" alt="Customer Web Pass - Completed Tear" width="45%" />
+</div>
+
+**What it does:** When service concludes, the digital ticket simulates a realistic physical paper tear with CSS animations, snapping off the perforated stub and stamping a red "SERVED" watermark.
+
+### 7. Public Lounge TV / Display Broadcast Mode (`/display`)
+![Public TV Display Mode](screenshots/display-tv-mode.png)
+**What it does:** A clean, high-contrast, fullscreen TV broadcast layout for waiting lounges. Syncs instantly via Socket.IO to announce newly called ticket numbers and directed counter stations.
 
 ## Architecture
 
-The system consists of two separate client applications communicating with a central Node.js backend.
+The system consists of two client applications communicating with a central Node.js backend.
 
 ```text
                     EnQFlow
@@ -72,7 +100,7 @@ The system consists of two separate client applications communicating with a cen
 
 ### Component Roles
 
-*   **EnQFlow Web/PWA (Customer):** A lightweight React interface where customers join the queue and watch their live status. No app installation required; it uses Web Push for notifications and CSS animations to simulate a physical physical ticket.
+*   **EnQFlow Web/PWA (Customer):** A lightweight React interface where customers join the queue and watch their live status. No app installation required; it uses Web Push for notifications and CSS animations to simulate a physical ticket.
 *   **EnQFlow Desktop (Receptionist):** An Electron-based React dashboard for staff. It provides high-performance, real-time control over the queue, allowing staff to approve requests, assign counters, and monitor daily metrics.
 *   **Node.js Backend (Server):** The central nervous system. It exposes REST APIs for standard data and uses Socket.IO for sub-second, bi-directional real-time events between the Web and Desktop clients, backed by a robust SQLite database.
 
@@ -105,29 +133,45 @@ The backend enforces a strict state machine to prevent client-side manipulation.
 *   npm
 
 ### 2. Install Dependencies
-Install dependencies for the root runner and all sub-projects:
+Install dependencies for each project:
 
 ```bash
-npm install
 cd server && npm install
 cd ../web && npm install
 cd ../desktop && npm install
 ```
 
 ### 3. Environment Variables
-Copy the `.env.example` file to `.env` in the root directory and configure it.
+Copy the `.env.example` file to `.env` in the `server` directory if custom configuration is needed.
 
-### 4. Run the Application
-The entire application stack (Backend, Web App, Desktop App) can now be started concurrently with a single command from the root directory:
+### 4. Running the Applications
 
+Open 3 terminal windows to run the components independently:
+
+**Terminal 1 — Backend Server:**
 ```bash
+cd server
 npm run dev
 ```
-*(On the first run, the database schema will be automatically created and seeded).*
 
-*   **Customer Web App:** Access at `http://localhost:5173`
-*   **Receptionist Desktop App:** Electron will launch automatically.
-*   **Backend Server:** Runs silently on port 5000.
+**Terminal 2 — Customer Web App:**
+```bash
+cd web
+npm run dev
+```
+Access at `http://localhost:5173` (or `/display` for public lounge TV).
+
+**Terminal 3 — Receptionist Desktop App:**
+```bash
+cd desktop
+npm run dev
+```
+Launches the Electron application window connected to the queue engine.
+
+## Default Demo Credentials
+
+*   **Email:** `receptionist@abchealth.com`
+*   **Password:** `recept123`
 
 ## License
 
